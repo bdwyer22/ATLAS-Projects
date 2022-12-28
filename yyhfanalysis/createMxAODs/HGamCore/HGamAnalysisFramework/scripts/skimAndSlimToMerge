@@ -1,0 +1,34 @@
+#!/bin/bash
+
+out=${1}
+shift
+in=${1//,/ }
+shift
+
+
+# if its a MxAOD then do the skin and slimming
+filename="MxAOD"
+
+if [[ "$in" == *"$filename"* ]]; then
+
+  rm -rf inputFileList.txt
+
+  for word in $in
+  do
+    echo $word | tee -a inputFileList.txt
+  done
+
+  runSkimAndSlim HGamTools/systematicsSkim.config
+
+  mv ./SkimAndSlimMerge/data-MxAOD/sample.root  $out 
+
+  exit 0
+
+fi
+
+# If not just use hadd
+echo Running hadd $out $in
+hadd $out $in
+
+
+

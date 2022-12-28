@@ -1,0 +1,114 @@
+#ifndef HGamTools_SkimAndSlim_ICC
+#define HGamTools_SkimAndSlim_ICC
+
+
+
+//____________________________________________________________________________
+template <class Container, class Object>
+EL::StatusCode
+SkimAndSlim::recordContainer(std::string name)
+{
+  ANA_CHECK_SET_TYPE( EL::StatusCode );
+
+  const Container *orig = nullptr;
+  ANA_CHECK( wk()->xaodEvent()->retrieve(orig, name) );
+
+  Container *copy = new Container();
+  xAOD::AuxContainerBase *copyAux = new xAOD::AuxContainerBase();
+  copy->setStore(copyAux);
+
+  for (auto part: *orig) {
+    Object *save = new Object();
+    copy->push_back(save);
+    *save = *part;
+  }
+
+  ANA_CHECK( m_outEvent->record(copy, name) );
+  name += "Aux.";
+  ANA_CHECK( m_outEvent->record(copyAux, name) );
+
+  return EL::StatusCode::SUCCESS;
+}
+
+
+
+//____________________________________________________________________________
+template <class T>
+EL::StatusCode
+SkimAndSlim::recordInfo(std::string name)
+{
+  ANA_CHECK_SET_TYPE( EL::StatusCode );
+//  std::cout << wk()->xaodEvent()-> dump() << std::endl;
+
+  const T *orig = nullptr;
+  //if( wk()->xaodEvent()->contains<T>(name) ){
+  //  std::cout << "Its in the store: " << name << std::endl; 
+  //} else {
+  //  std::cout << "Its not in the store: " << name <<  std::endl;  
+  //  return EL::StatusCode::SUCCESS;
+  //}
+  ANA_CHECK( wk()->xaodEvent()->retrieve(orig, name) );
+
+  T *copy = new T();
+  xAOD::AuxInfoBase *copyAux = new xAOD::AuxInfoBase();
+  copy->setStore(copyAux);
+
+  *copy = *orig;
+
+  ANA_CHECK( m_outEvent->record(copy, name) );
+  name += "Aux.";
+  ANA_CHECK( m_outEvent->record(copyAux, name) );
+
+  return EL::StatusCode::SUCCESS;
+}
+
+
+template <class Container>
+bool 
+  SkimAndSlim::contains( const std::string &name )
+{
+  return  wk()->xaodEvent()->contains<Container>( name );
+}
+    
+
+
+
+//____________________________________________________________________________
+template <class Container>
+EL::StatusCode
+SkimAndSlim::getConstContainer(const Container* &cont, const std::string &name)
+{
+  ANA_CHECK_SET_TYPE( EL::StatusCode );
+
+  ANA_CHECK( wk()->xaodEvent()->retrieve(cont, name) );
+
+  return EL::StatusCode::SUCCESS;
+}
+
+
+
+//____________________________________________________________________________
+template <class Container>
+EL::StatusCode
+SkimAndSlim::getContainer(Container* &cont, const std::string &name)
+{
+  ANA_CHECK_SET_TYPE( EL::StatusCode );
+
+  const Container *constCont = nullptr;
+
+  if (!m_outEvent->contains<Container>(name)) {
+    ATH_MSG_ERROR("Couldn't retrieve " << name.c_str() << " from output event.");
+    return EL::StatusCode::FAILURE;
+  }
+
+  ANA_CHECK( m_outEvent->retrieve(constCont, name) );
+
+  cont = const_cast<Container*>(constCont);
+
+  return EL::StatusCode::SUCCESS;
+}
+
+
+
+#endif // HGamTools_SkimAndSlim_ICC
+
